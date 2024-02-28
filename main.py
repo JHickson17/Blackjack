@@ -29,6 +29,7 @@ def blackjack_display(player, deck, betMade, standPressed):
     pygame.draw.rect(screen, WHITE, rect2)
 
     if betMade:
+        display_deal(player, deck)
         display_player_cards(player, deck)  #Once the player has placed their bet it will display their cards
 
     if standPressed:
@@ -56,6 +57,16 @@ def display_buttons(betMade):   #Displays all of the buttons
     if betMade:
         hit.display_button(screen)  #Only displays the hit and stand button once the bet has been placed
         stand.display_button(screen)
+
+def display_deal(player, deck):
+    x_pos = 20
+    y_pos = 275
+    end_x_pos = (WIDTH / 2) - deck.cardWidth
+    end_y_pos = 530
+    for i in range(player.numOfPlayerCards):
+        end_x_pos += (deck.cardWidth*i) + (5*i) - 150
+        while x_pos != end_x_pos and y_pos != end_y_pos:
+            
 
 def display_player_cards(player, deck):    #Displays the player's cards
     start_x_position = (WIDTH / 2) - deck.cardWidth
@@ -304,8 +315,10 @@ def create_account_display(mouse, validPassword):
     back.display_button(screen)
     confirm.display_button(screen)
 
-    if not validPassword and confirm.button_pressed(mouse):
+    if validPassword == "invalid" and confirm.button_pressed(mouse):
             password_error()
+    elif validPassword == "username taken" and confirm.button_pressed(mouse):
+        existing_username()
 
     pygame.display.update()
 
@@ -313,6 +326,13 @@ def password_error():
     font = pygame.font.SysFont("dejavuserif", 30)
     errorMessage = font.render("Password must be between 8 and 20 character and contain at least 1 number", 1, RED)
     screen.blit(errorMessage, (150, 515))
+    pygame.display.update()
+    time.sleep(2)
+
+def existing_username():
+    font = pygame.font.SysFont("dejavuserif", 30)
+    errorMessage = font.render("Username taken. Try again", 1, RED)
+    screen.blit(errorMessage, (425, 515))
     pygame.display.update()
     time.sleep(2)
 
@@ -345,7 +365,7 @@ def create_account():
 
         validPassword = validate_password(mouse)
 
-        if validPassword:
+        if validPassword == "valid":
             add_user(username.input, password.input, 100)
             account_created()
             break
@@ -353,17 +373,23 @@ def create_account():
         create_account_display(mouse, validPassword)
 
 def validate_password(mouse):
+    existingRecord = find_user(username.input)
     containsNumber = False
     for i in range(10):
         if str(i) in password.input:    #Iterates through all of the characters in the password and checks if it contains a number
             containsNumber = True 
+    try:
+        if existingRecord[0][0] == username.input:
+            return "username taken"
+    except:
+        pass
     if confirm.button_pressed(mouse):   #Only checks it once confirm has been pressed
         if len(password.input) >= 8 and len(password.input) <= 20:    #Checks if it's between 8 and 20 character long
             if password.input == confirmPassword.input:     #Checks if the same password has been entered both times
                 if containsNumber == True:     #Checks if it contains a number
-                    return True     #Returns true if it's valid
+                    return "valid"     #Returns true if it's valid
 
-    return False    #Returns false if it isn't valid
+    return "invalid"    #Returns false if it isn't valid
 
 
 def main():
