@@ -88,7 +88,7 @@ class Dealer():
             if card[0] == "1" and len(card) < 3:    
                 numOfAces += 1  #Adds one to the total if there is an ace
         if numOfAces > 0:
-            while self.dealerTotal > 21: #fkgjhaosdigklsadjf
+            while self.dealerTotal > 21:    #If the player has any aces and their total is more than 21 it will change the value of the aces from 11 to 1
                 self.dealerTotal -= 10
                 numOfAces -= 1
 
@@ -98,7 +98,7 @@ class Dealer():
             self.cards += newCards
             self.shuffle_deck()
 
-    def reset_dealer(self):
+    def reset_dealer(self):     #Resets everything once the round is done
         self.dealerCards = []
         self.dealerCardImages = []
         self.numOfDealerCards = 0
@@ -208,7 +208,7 @@ class Player(Dealer):
         screen.blit(betText, (930, 520))
 
     def increase_bet(self):
-        if self.money > self.bet:
+        if self.money > self.bet:   #Increases the bet by 10 if the player has enough money
             self.bet += 10
 
     def decrease_bet(self):
