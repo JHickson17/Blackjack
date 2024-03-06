@@ -20,7 +20,7 @@ RED = (255, 0, 0)
 
 MENU_BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("images", "menu background.XCF")), (WIDTH, HEIGHT))
 
-def blackjack_display(player, deck, betMade, standPressed):
+def blackjack_display(player, dealer, betMade, standPressed):
     screen.fill(GREEN)
 
     rect1 = pygame.Rect(900, 0, 400, 700)
@@ -29,11 +29,10 @@ def blackjack_display(player, deck, betMade, standPressed):
     pygame.draw.rect(screen, WHITE, rect2)
 
     if betMade:
-        display_deal(player, deck)
-        display_player_cards(player, deck)  #Once the player has placed their bet it will display their cards
+        display_player_cards(player, dealer)  #Once the player has placed their bet it will display their cards
 
     if standPressed:
-        display_dealer_cards(deck)  #Once the player has pressed stand it will display the dealer's cards
+        display_dealer_cards(dealer)  #Once the player has pressed stand it will display the dealer's cards
 
     display_buttons(betMade)    #Displays the buttons
     display_account()   #Displays the account that the player has signed in to
@@ -58,25 +57,15 @@ def display_buttons(betMade):   #Displays all of the buttons
         hit.display_button(screen)  #Only displays the hit and stand button once the bet has been placed
         stand.display_button(screen)
 
-def display_deal(player, deck):
-    x_pos = 20
-    y_pos = 275
-    end_x_pos = (WIDTH / 2) - deck.cardWidth
-    end_y_pos = 530
-    for i in range(player.numOfPlayerCards):
-        end_x_pos += (deck.cardWidth*i) + (5*i) - 150
-        while x_pos != end_x_pos and y_pos != end_y_pos:
-            
-
-def display_player_cards(player, deck):    #Displays the player's cards
-    start_x_position = (WIDTH / 2) - deck.cardWidth
+def display_player_cards(player, dealer):    #Displays the player's cards
+    start_x_position = (WIDTH / 2) - dealer.cardWidth
     for i in range(player.numOfPlayerCards): 
-        screen.blit(player.playerCardImages[i], ((start_x_position + (deck.cardWidth*i) + (5*i)-150), 530))
+        screen.blit(player.playerCardImages[i], ((start_x_position + (dealer.cardWidth*i) + (5*i)-150), 530))
 
-def display_dealer_cards(deck): #Displays the dealer's cards
-    start_x_position = (WIDTH / 2) - deck.cardWidth
-    for i in range(deck.numOfDealerCards): 
-        screen.blit(deck.dealerCardImages[i], ((start_x_position + (deck.cardWidth*i) + (5*i)-150), 20)) 
+def display_dealer_cards(dealer): #Displays the dealer's cards
+    start_x_position = (WIDTH / 2) - dealer.cardWidth
+    for i in range(dealer.numOfDealerCards): 
+        screen.blit(dealer.dealerCardImages[i], ((start_x_position + (dealer.cardWidth*i) + (5*i)-150), 20)) 
 
 def mouse_rect():   #Creates a rect on the mouse and returns it
     mousePos = pygame.mouse.get_pos()
@@ -96,18 +85,18 @@ def change_bet(player, mouse, count, lastPressed):
         lastPressed = count
     return lastPressed
 
-def get_result(player, deck, dealerTurnDone):
-    if deck.dealerTotal > 21:   #If the dealers total is over 21 the player wins
+def get_result(player, dealer, dealerTurnDone):
+    if dealer.dealerTotal > 21:   #If the dealers total is over 21 the player wins
         player.won = True
-    elif player.playerTotal > deck.dealerTotal and dealerTurnDone:  #If the player's total is greater than the dealer's total they win
+    elif player.playerTotal > dealer.dealerTotal and dealerTurnDone:  #If the player's total is greater than the dealer's total they win
         player.won = True
 
     elif player.playerTotal > 21: #If the player's total is over 21 they lose
         player.lost = True
-    elif deck.dealerTotal > player.playerTotal and dealerTurnDone:  #If the dealer's total is greater than the player's total the player loses
+    elif dealer.dealerTotal > player.playerTotal and dealerTurnDone:  #If the dealer's total is greater than the player's total the player loses
         player.lost = True
 
-    elif player.playerTotal == deck.dealerTotal and dealerTurnDone:   #If their totals are the same then it's a draw
+    elif player.playerTotal == dealer.dealerTotal and dealerTurnDone:   #If their totals are the same then it's a draw
         player.draw = True
 
 def blackjack():
@@ -120,7 +109,7 @@ def blackjack():
         money = userDetails[0][2]
         signedIn = True
 
-    deck = Deck(cards)
+    dealer = Dealer(cards)
     player = Player(cards, money)
 
     run = True
@@ -133,7 +122,7 @@ def blackjack():
     dealerTurnDone = False
     roundEnd = False
     startRound = True
-    deck.shuffle_deck() #Shuffles the deck of cards
+    dealer.shuffle_deck() #Shuffles the deck of cards
 
     while run:
         clock.tick(FPS)
@@ -147,7 +136,7 @@ def blackjack():
         if startRound:  #Checks if it is the start of the round
             player.start_round()    #The dealer and the player both get 2 cards
             player.load_player_images() #Loads the players card images into an array
-            deck.load_dealer_images()   #Loads the dealers card images into an array
+            dealer.load_dealer_images()   #Loads the dealers card images into an array
             startRound = False
 
         if betMade == False:    #Checks if the player hasn't made a bet
@@ -168,18 +157,18 @@ def blackjack():
             standPressed = True
 
         if standPressed and not player.won: #Checks if the player has pressed stand and that they haven't already won
-            dealerTurnDone = deck.dealer_turn() #Gives the dealer a card if their total is 16 or less
-            deck.load_dealer_images()   #Loads the image for the card and adds it to the array with the other images
+            dealerTurnDone = dealer.dealer_turn() #Gives the dealer a card if their total is 16 or less
+            dealer.load_dealer_images()   #Loads the image for the card and adds it to the array with the other images
 
         player.convert_ace()    #If the players total is over 21 and they have and ace it changes the aces value to 1
-        deck.convert_ace()      #If the dealers total is over 21 and they have and ace it changes the aces value to 1
+        dealer.convert_ace()      #If the dealers total is over 21 and they have and ace it changes the aces value to 1
 
-        get_result(player, deck, dealerTurnDone)    #Checks if the player has won, lost or drawn
+        get_result(player, dealer, dealerTurnDone)    #Checks if the player has won, lost or drawn
 
         if player.won:  #Checks if the player has won
             player.win()    #Pays the player double their bet
         
-        blackjack_display(player, deck, betMade, standPressed)
+        blackjack_display(player, dealer, betMade, standPressed)
 
         if player.lost or player.won or player.draw:    #Checks if the round has ended
             roundEnd = True
@@ -187,7 +176,7 @@ def blackjack():
         if roundEnd: #Checks if the round has ended
             if signedIn:    #Checks if the player is signed in to an account
                 update_money(Username, player.money)    #Updates their money in the database
-            deck.reset_dealer() #Resets the dealers cards
+            dealer.reset_dealer() #Resets the dealers cards
             player.reset_player()   #Resets the players cards
             betMade = False
             standPressed = False
