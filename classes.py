@@ -6,7 +6,7 @@ import time
 pygame.init()
 pygame.font.init()
 
-class Deck():
+class Dealer():
     def __init__(self, cards):
         self.cards = cards
         self.dealerCards = []
@@ -106,7 +106,7 @@ class Deck():
         self.lastDealerCardDealt = 0
         self.lastDealt = 0
 
-class Player(Deck):   
+class Player(Dealer):   
     def __init__(self, cards, money):
         super(Player, self).__init__(cards)
         self.money = money
