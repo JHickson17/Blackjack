@@ -88,7 +88,7 @@ class Dealer():
             if card[0] == "1" and len(card) < 3:    
                 numOfAces += 1  #Adds one to the total if there is an ace
         if numOfAces > 0:
-            while self.dealerTotal > 21:
+            while self.dealerTotal > 21: #fkgjhaosdigklsadjf
                 self.dealerTotal -= 10
                 numOfAces -= 1
 
