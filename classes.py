@@ -84,9 +84,9 @@ class Dealer():
 
     def convert_ace(self):
         numOfAces = 0
-        for card in self.dealerCards:
-            if card[0] == "1" and len(card) < 3:
-                numOfAces += 1
+        for card in self.dealerCards:   #Loops through all of the dealers cards and checks of there are any aces
+            if card[0] == "1" and len(card) < 3:    
+                numOfAces += 1  #Adds one to the total if there is an ace
         if numOfAces > 0:
             while self.dealerTotal > 21:
                 self.dealerTotal -= 10
