@@ -17,6 +17,7 @@ BLACK =(20, 20, 20)
 GREY = (160, 160, 160)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
 
 MENU_BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("images", "menu background.XCF")), (WIDTH, HEIGHT))
 
@@ -100,11 +101,21 @@ def get_result(player, dealer, dealerTurnDone):
         player.draw = True
 
 def blackjack():
+    statistics = {"roundsPlayed": 0,
+                  "roundsWon": 0,
+                  "roundsLost": 0,
+                  "roundsDrawn": 0}
     userDetails = find_user(username.input) #Gets the users details if they have signed in
+
     if username.input == "":    #If they haven't signed in then they get given £100
         money = 100
         signedIn = False
     else:
+        stats = load_statistics(username.input)[0]
+        statistics["roundsPlayed"] = stats[0]
+        statistics["roundsWon"] = stats[1]
+        statistics["roundsLost"] = stats[2]
+        statistics["roundsDrawn"] = stats[3]
         Username = userDetails[0][0] #If they have signed in it loads their username and the amount of money they have from the database
         money = userDetails[0][2]
         signedIn = True
@@ -175,6 +186,14 @@ def blackjack():
 
         if roundEnd: #Checks if the round has ended
             if signedIn:    #Checks if the player is signed in to an account
+                statistics["roundsPlayed"] += 1
+                if player.won:
+                    statistics["roundsWon"] += 1
+                elif player.lost:
+                    statistics["roundsLost"] += 1
+                elif player.draw:
+                    statistics["roundsDrawn"] += 1
+                update_statistics(username.input, statistics["roundsPlayed"], statistics["roundsWon"], statistics["roundsLost"], statistics["roundsDrawn"])
                 update_money(Username, player.money)    #Updates their money in the database
             dealer.reset_dealer() #Resets the dealers cards
             player.reset_player()   #Resets the players cards
@@ -200,6 +219,9 @@ def display_menu():
     play.display_button(screen)     #Displays all of the buttons in the menu
     signIn.display_button(screen)
     createAcc.display_button(screen)
+    leaderboardButton.display_button(screen)
+    if username.input != "":
+        statisticsButton.display_button(screen)
     quit.display_button(screen)
 
     pygame.display.update() #Updates the display
@@ -223,6 +245,12 @@ def menu():
         
         if signIn.button_pressed(mouse):    #If they press the sign in button it returns sign in
             return "sign in"
+        
+        if leaderboardButton.button_pressed(mouse):
+            return "leaderboard"
+        
+        if statisticsButton.button_pressed(mouse):
+            return "statistics"
         
         if quit.button_pressed(mouse):  #If they press the quit button it returns quit
             return "quit"
@@ -268,7 +296,9 @@ def incorrect_details():
 
 def sign_in():
     run = True
+    clock = pygame.time.Clock()
     while run:
+        clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
@@ -334,7 +364,9 @@ def account_created():
 
 def create_account():
     run = True
+    clock = pygame.time.Clock()
     while run:
+        clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
@@ -380,6 +412,66 @@ def validate_password(mouse):
 
     return "invalid"    #Returns false if it isn't valid
 
+def leaderboard():
+    run = True
+    clock = pygame.time.Clock()
+    players = load_leaderboard()
+    
+    while run:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "quit"
+            
+        mouse = mouse_rect()
+        screen.blit(MENU_BACKGROUND, (0, 0))
+
+        if len(players) < 10:
+            n = len(players)
+        else:
+            n = 10
+        for i in range(0, n):
+            leaderboardPlace = str(i+1)
+            player = players[i]
+            if player[0] == username.input:
+                colour = YELLOW
+            else:
+                colour = RED
+            font = pygame.font.SysFont("dejavuserif", 45)
+            text = font.render(leaderboardPlace+". "+str(player[0])+"    £"+str(player[1]), 1, colour)
+            screen.blit(text, (450, 135+(50*i)))
+        returnToMenu.display_button(screen)
+        if returnToMenu.button_pressed(mouse):
+            break
+        pygame.display.update()
+
+def statistics():
+    run = True
+    clock = pygame.time.Clock()
+    stats = load_statistics(username.input)[0]
+    
+    while run:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "quit"
+            
+        mouse = mouse_rect()
+        screen.blit(MENU_BACKGROUND, (0, 0))
+        rect = pygame.Rect(120, 200, 1000, 100)
+        pygame.draw.rect(screen, GREY, rect, 0, 10)
+
+        font = pygame.font.SysFont("dejavuserif", 37)
+        text = font.render("Rounds Played     Rounds Won     Rounds Lost     Rounds Drawn", 1, BLACK)
+        screen.blit(text, (140, 200))
+        for i in range(4):
+            statistic = font.render(str(stats[i]), 1, RED)
+            screen.blit(statistic, (230+(i*250), 250))
+        returnToMenu.display_button(screen)
+        if returnToMenu.button_pressed(mouse):
+            break
+        pygame.display.update()
+
 
 def main():
     run = True
@@ -389,10 +481,14 @@ def main():
 
         if menuSelection == "play":
             menuSelection = blackjack()
-        if menuSelection == "create account":
+        if menuSelection == "create account" and username.input == "":
             menuSelection = create_account()
-        if menuSelection == "sign in":
+        if menuSelection == "sign in" and username.input == "":
             menuSelection = sign_in()
+        if menuSelection == "leaderboard":
+            menuSelection = leaderboard()
+        if menuSelection == "statistics" and username.input != "":
+            menuSelection = statistics()
         if menuSelection == "quit":
             run = False
 
@@ -413,6 +509,8 @@ returnToMenu = Button(10, 10, 100, 30, GREY, "Quit", 25, 37, 11)
 play = Button(400, 200, 400, 90, GREY, "PLAY", 70, 517, 205)
 signIn = Button(400, 300, 400, 90, GREY, "SIGN IN", 60, 490, 310)
 createAcc = Button(400, 400, 400, 90, GREY, "CREATE ACCOUNT", 40, 420, 420)
+statisticsButton = Button(1030, 610, 150, 35, GREY, "STATISTICS", 20, 1055, 617)
+leaderboardButton = Button(1030, 650, 150, 35, GREY, "LEADERBOARD", 15, 1050, 658)
 quit = Button(400, 500, 400, 90, GREY, "QUIT", 70, 517, 505)
 
 username = Text_box(350, 200, "Enter Username:", False)
