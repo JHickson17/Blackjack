@@ -22,16 +22,21 @@ FOREIGN KEY (Username) REFERENCES Users (Username))""")
 
 
 def add_user(username, password, money):
-    cur.execute("INSERT INTO Users VALUES (?, ?, ?)", (username, password, money))
-    cur.execute("INSERT INTO Statistics VALUES (?, ?, ?, ?, ?)", (username, 0, 0, 0, 0))
+    cur.execute("""INSERT INTO Users 
+                   VALUES (?, ?, ?)""", (username, password, money))
+    cur.execute("""INSERT INTO Statistics 
+                   VALUES (?, ?, ?, ?, ?)""", (username, 0, 0, 0, 0))
     connection.commit()
 
 def delete_record(username):
-    cur.execute("DELETE FROM Users WHERE Username = ?", (username,))
+    cur.execute("""DELETE FROM Users 
+                   WHERE Username = ?""", (username,))
     connection.commit()
 
 def find_user(username):
-    cur.execute("SELECT * FROM Users WHERE Username=?", (username,))
+    cur.execute("""SELECT Username 
+                   FROM Users 
+                   WHERE Username=?""", (username,))
     userDetails = cur.fetchall()
     return userDetails
 
