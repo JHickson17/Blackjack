@@ -42,7 +42,7 @@ def blackjack_display(player, dealer, betMade, standPressed):
     player.display_bet(screen, betMade) #Displays the player's bet
 
     player.display_result(screen)   #Once the user has won, lost or drawn it will display the result and how much money they have won or lost
-
+    
     pygame.display.update()
 
     if player.won or player.draw or player.lost:
@@ -57,6 +57,8 @@ def display_buttons(betMade):   #Displays all of the buttons
     if betMade:
         hit.display_button(screen)  #Only displays the hit and stand button once the bet has been placed
         stand.display_button(screen)
+        double.display_button(screen)
+        
 
 def display_player_cards(player, dealer):    #Displays the player's cards
     start_x_position = (WIDTH / 2) - dealer.cardWidth
@@ -222,6 +224,7 @@ def display_menu():
     leaderboardButton.display_button(screen)
     if username.input != "":
         statisticsButton.display_button(screen)
+        signOut.display_button(screen)
     quit.display_button(screen)
 
     pygame.display.update() #Updates the display
@@ -249,8 +252,13 @@ def menu():
         if leaderboardButton.button_pressed(mouse):
             return "leaderboard"
         
-        if statisticsButton.button_pressed(mouse):
+        if statisticsButton.button_pressed(mouse) and username.input != "":
             return "statistics"
+        
+        if signOut.button_pressed(mouse) and username.input != "":
+            username.input = ""
+            password.input = ""
+            confirmPassword.input = ""
         
         if quit.button_pressed(mouse):  #If they press the quit button it returns quit
             return "quit"
@@ -312,6 +320,8 @@ def sign_in():
 
         if back.button_pressed(mouse):  #If the user presses the back button it goes back to the menu
             username.input = ""
+            password.input = ""
+            confirmPassword.input = ""
             break
 
         correctDetails= check_details(mouse)
@@ -338,6 +348,8 @@ def create_account_display(mouse, validPassword):
             password_error()
     elif validPassword == "username taken" and confirm.button_pressed(mouse):
         existing_username()
+    elif validPassword == "passwords not matching" and confirm.button_pressed(mouse):
+        passwords_not_matching()
 
     pygame.display.update()
 
@@ -351,6 +363,13 @@ def password_error():
 def existing_username():
     font = pygame.font.SysFont("dejavuserif", 30)
     errorMessage = font.render("Username taken. Try again", 1, RED)
+    screen.blit(errorMessage, (425, 515))
+    pygame.display.update()
+    time.sleep(2)
+
+def passwords_not_matching():
+    font = pygame.font.SysFont("dejavuserif", 30)
+    errorMessage = font.render("Passwords do not match.", 1, RED)
     screen.blit(errorMessage, (425, 515))
     pygame.display.update()
     time.sleep(2)
@@ -382,6 +401,8 @@ def create_account():
 
         if back.button_pressed(mouse):
             username.input = ""
+            password.input = ""
+            confirmPassword.input = ""
             break
 
         validPassword = validate_password(mouse)
@@ -409,7 +430,8 @@ def validate_password(mouse):
             if password.input == confirmPassword.input:     #Checks if the same password has been entered both times
                 if containsNumber == True:     #Checks if it contains a number
                     return "valid"     #Returns true if it's valid
-
+            else:
+                return "passwords not matching"
     return "invalid"    #Returns false if it isn't valid
 
 def leaderboard():
@@ -504,6 +526,8 @@ increaseBet = Button(1055, 575, 120, 50, GREY, "-->", 50, 1085, 568)
 placeBet = Button(925, 630, 250, 50, GREY, "Place bet", 40, 975, 630)
 hit = Button(925, 465, 120, 50, GREY, "Hit", 40, 960, 470)
 stand = Button(1055, 465, 120, 50, GREY, "Stand", 35, 1075, 472)
+double = Button(925, 405, 120, 50, GREY, "Double", 30, 940, 412)
+split = stand = Button(1055, 405, 120, 50, GREY, "Split", 35, 1080, 410)
 returnToMenu = Button(10, 10, 100, 30, GREY, "Quit", 25, 37, 11)
 
 play = Button(400, 200, 400, 90, GREY, "PLAY", 70, 517, 205)
@@ -511,6 +535,7 @@ signIn = Button(400, 300, 400, 90, GREY, "SIGN IN", 60, 490, 310)
 createAcc = Button(400, 400, 400, 90, GREY, "CREATE ACCOUNT", 40, 420, 420)
 statisticsButton = Button(1030, 610, 150, 35, GREY, "STATISTICS", 20, 1055, 617)
 leaderboardButton = Button(1030, 650, 150, 35, GREY, "LEADERBOARD", 15, 1050, 658)
+signOut = Button(10, 10, 100, 30, GREY, "SIGN OUT", 17, 23, 15)
 quit = Button(400, 500, 400, 90, GREY, "QUIT", 70, 517, 505)
 
 username = Text_box(350, 200, "Enter Username:", False)
