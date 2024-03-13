@@ -6,10 +6,10 @@ connection.execute("PRAGMA foreign_keys = 1")
 cur = connection.cursor()
 
 def create_users_table():
-    cur.execute("""CREATE TABLE Users 
+    cur.execute("""CREATE TABLE Users   
 (Username TEXT PRIMARY KEY,
 Password  TEXT,
-Money     INTEGER)""")
+Money     INTEGER)""")  #Creates the table that stores the users login details and money
 
 def create_statistics_table():
     cur.execute("""CREATE TABLE Statistics
@@ -34,7 +34,7 @@ def delete_record(username):
     connection.commit()
 
 def find_user(username):
-    cur.execute("""SELECT Username 
+    cur.execute("""SELECT *
                    FROM Users 
                    WHERE Username=?""", (username,))
     userDetails = cur.fetchall()
