@@ -57,7 +57,7 @@ def display_buttons(betMade):   #Displays all of the buttons
     if betMade:
         hit.display_button(screen)  #Only displays the hit and stand button once the bet has been placed
         stand.display_button(screen)
-        double.display_button(screen)
+
         
 
 def display_player_cards(player, dealer):    #Displays the player's cards
@@ -527,7 +527,7 @@ placeBet = Button(925, 630, 250, 50, GREY, "Place bet", 40, 975, 630)
 hit = Button(925, 465, 120, 50, GREY, "Hit", 40, 960, 470)
 stand = Button(1055, 465, 120, 50, GREY, "Stand", 35, 1075, 472)
 double = Button(925, 405, 120, 50, GREY, "Double", 30, 940, 412)
-split = stand = Button(1055, 405, 120, 50, GREY, "Split", 35, 1080, 410)
+split = Button(1055, 405, 120, 50, GREY, "Split", 35, 1080, 410)
 returnToMenu = Button(10, 10, 100, 30, GREY, "Quit", 25, 37, 11)
 
 play = Button(400, 200, 400, 90, GREY, "PLAY", 70, 517, 205)
