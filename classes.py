@@ -18,18 +18,11 @@ class Dealer():
         self.lastDealerCardDealt = 0
         self.lastDealt = 0
 
-    def load_dealer_images(self):   #Loads the images of the dealer's cards into a list
+    def load_card_images(self):   #Loads the images of the dealer's cards into a list
         self.numOfDealerCards = len(self.dealerCards)   #Gets the number of cards the dealer has
-        suit = ""
-        card = ""
-
         for i in range(self.lastDealerCardDealt, self.numOfDealerCards):    
-            if len(self.dealerCards[i]) == 2:
-                cardNum = self.dealerCards[i][0]    #Gets the card num from the first character in the string
-                cardSuit = self.dealerCards[i][1]   #Gets the card suit from the second character in the string
-            else:                                   #If the card is a 10 it gets the number from the first two characters
-                cardNum = self.dealerCards[i][0] + self.dealerCards[i][1]
-                cardSuit = self.dealerCards[i][2]
+            cardNum = self.dealerCards[i][:-1]
+            cardSuit = self.dealerCards[i][len(self.dealerCards[i])-1:]
             if cardSuit == "C":     
                 suit = "clubs"
             if cardSuit == "S":
@@ -56,12 +49,11 @@ class Dealer():
             self.dealerCardImages.append(image)     #Adds the card images to an array
             self.lastDealerCardDealt += 1
 
-    def convert_dealer_card(self, cardNum):
+    def convert_card(self, cardNum):
         try:
-            if len(self.dealerCards[cardNum]) < 3:
-                num = int(self.dealerCards[cardNum][0]) #Converts the card num from a string to a integer
-            else:
-                num = 10
+            num = int(self.dealerCards[cardNum][:-1])
+            if num == 1:
+                num += 10
         except:
             num = 10
         self.dealerTotal += num     #Adds the card value to the dealer total
@@ -70,14 +62,15 @@ class Dealer():
     def shuffle_deck(self):    #Shuffles the deck
         random.shuffle(self.cards)
     
-    def deal_dealer_card(self):
+    def deal_card(self):
         card = self.cards.pop()     #Removes next card from the deck and stores it
         self.dealerCards.append(card)   #Adds the card to the list of dealer cards
 
     def dealer_turn(self):
         if self.dealerTotal < 17:   #When it is the dealer's turn if their total is less than 17 they take another card
-            self.deal_dealer_card()
-            self.convert_dealer_card(self.lastDealerCardDealt)
+            self.deal_card()
+            self.convert_card(self.lastDealerCardDealt)
+            self.load_card_images()
             time.sleep(1.5)
         if self.dealerTotal > 16:   #If their total is greater than 16 they don't draw antoher card
             return True
@@ -85,7 +78,7 @@ class Dealer():
     def convert_ace(self):
         numOfAces = 0
         for card in self.dealerCards:   #Loops through all of the dealers cards and checks of there are any aces
-            if card[0] == "1" and len(card) < 3:    
+            if card[0][:-1] == "1":
                 numOfAces += 1  #Adds one to the total if there is an ace
         if numOfAces > 0:
             while self.dealerTotal > 21:    #If the player has any aces and their total is more than 21 it will change the value of the aces from 11 to 1
@@ -123,27 +116,11 @@ class Player(Dealer):
         self.draw = False
         self.winnings = 0
 
-    def start_round(self):
-        for i in range(2):
-            self.deal_player_card()     #At the when the round starts the dealer and player are dealt 2 cards each
-            self.deal_dealer_card()
-
-        for i in range(2):
-            self.convert_player_card(i)
-            self.convert_dealer_card(i)
-
-    def load_player_images(self):      #Loads the images of the player's cards into an array
+    def load_card_images(self):      #Loads the images of the player's cards into an array
         self.numOfPlayerCards = len(self.playerCards)
-        suit = ""
-        card = ""
-
         for i in range(self.lastPlayerCardDealt, self.numOfPlayerCards):
-            if len(self.playerCards[i]) == 2:
-                cardNum = self.playerCards[i][0]     #Gets the card num from the first character in the string
-                cardSuit = self.playerCards[i][1]   #Gets the card suit from the second character in the string
-            else:                                   
-                cardNum = self.playerCards[i][0] + self.playerCards[i][1]   #If the card is a 10 it gets the number from the first two characters
-                cardSuit = self.playerCards[i][2]
+            cardNum = self.playerCards[i][:-1]
+            cardSuit = self.playerCards[i][len(self.playerCards[i])-1:]
             if cardSuit == "C":
                 suit = "clubs"
             if cardSuit == "S":
@@ -170,29 +147,26 @@ class Player(Dealer):
             self.playerCardImages.append(image)     #Adds the image to an array
             self.lastPlayerCardDealt += 1
 
-    def convert_player_card(self, cardNum):
+    def convert_card(self, cardNum):
         try:
-            if len(self.playerCards[cardNum]) < 3:
-                num = int(self.playerCards[cardNum][0])
-            else:
-                num = 10
+            num = int(self.playerCards[cardNum][:-1])
+            if num == 1:
+                num += 10
         except:
             num = 10
-        if num == 1:
-            num += 10
         self.playerTotal += num
 
     def convert_ace(self):
         numOfAces = 0
         for card in self.playerCards:
-            if card[0] == "1" and len(card) < 3:
+            if card[0][:-1] == "1":
                 numOfAces += 1
         if numOfAces > 0:
             while self.playerTotal > 21:
                 self.playerTotal -= 10
                 numOfAces -= 1
 
-    def deal_player_card(self):
+    def deal_card(self):
         card = self.cards.pop()     #Removes next card from the deck and stores it
         self.playerCards.append(card)   #Adds the card to the list of player cards
 
