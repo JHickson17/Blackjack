@@ -48,14 +48,6 @@ def blackjack_display(player, dealer, betMade, standPressed, doublePressed):
     if player.won or player.draw or player.lost:
         time.sleep(3)       #Pauses the program for 3 seconds at the end of the round
 
-def check_for_split(player):
-    card1 = player.playerCards[0][:-1]
-    card2 = player.playerCards[1][:-1]
-    if card1 == card2:
-        return True
-    else:
-        return False
-
 def check_for_double(player):
     card1 = player.playerCards[0][:-1]
     card2 = player.playerCards[1][:-1]
@@ -73,9 +65,6 @@ def display_buttons(betMade, player, doublePressed):   #Displays all of the butt
     if betMade:
         hit.display_button(SCREEN)  #Only displays the hit and stand button once the bet has been placed
         stand.display_button(SCREEN)
-
-        if check_for_split(player):
-            split.display_button(SCREEN)
 
         if check_for_double(player) and not doublePressed:
             double.display_button(SCREEN)
@@ -107,6 +96,12 @@ def change_bet(player, mouse, count, lastPressed):
         player.increase_bet()
         lastPressed = count
     return lastPressed
+
+def start_round(player):
+    for i in range(2):
+        player.deal_card()
+        player.convert_card(player.lastPlayerCardDealt)
+        player.load_card_images()
 
 def get_result(player, dealer, dealerTurnDone):
     if dealer.dealerTotal > 21:   #If the dealers total is over 21 the player wins
@@ -168,13 +163,10 @@ def blackjack():
         mouse = mouse_rect()
 
         if startRound:  #Checks if it is the start of the round
-            player.start_round()    #The dealer and the player both get 2 cards
-            player.load_player_images() #Loads the players card images into an array
-            dealer.load_dealer_images()   #Loads the dealers card images into an array
+            start_round(player)    #The player gets dealt 2 cards
             startRound = False
 
         canDouble = check_for_double(player)
-        canSplit = check_for_split(player)
 
         if betMade == False:    #Checks if the player hasn't made a bet
             lastPressed = change_bet(player, mouse, count, lastPressed) #Lets the player change their bet
@@ -185,9 +177,9 @@ def blackjack():
 
         if hit.button_pressed(mouse) and count > (lastPressed+60) and standPressed == False and betMade: #Checks if the player has pressed hit, if theu've pressed stand and if they've made a bet
             if player.won == False and player.lost == False and player.draw == False: #Checks that the player hasn't already won, lost or drawn
-                player.deal_player_card()   #Gives the player another card
-                player.convert_player_card(player.lastPlayerCardDealt)  #Converts the card into an integer and adds it onto their total
-                player.load_player_images() #Loads the image for the card dealt and adds it to the array with the other images
+                player.deal_card()   #Gives the player another card
+                player.convert_card(player.lastPlayerCardDealt)  #Converts the card into an integer and adds it onto their total
+                player.load_card_images() #Loads the image for the card dealt and adds it to the array with the other images
                 lastPressed = count
 
         if stand.button_pressed(mouse) and count > (lastPressed+60): #Checks if the player presses stand
@@ -200,11 +192,10 @@ def blackjack():
             doublePressed = True
             player.deal_player_card()
             player.convert_player_card(player.lastPlayerCardDealt)
-            player.load_player_images()
+            player.load_card_images()
 
         if standPressed and not player.won: #Checks if the player has pressed stand and that they haven't already won
             dealerTurnDone = dealer.dealer_turn() #Gives the dealer a card if their total is 16 or less
-            dealer.load_dealer_images()   #Loads the image for the card and adds it to the array with the other images
 
         player.convert_ace()    #If the players total is over 21 and they have and ace it changes the aces value to 1
         dealer.convert_ace()      #If the dealers total is over 21 and they have and ace it changes the aces value to 1
@@ -559,8 +550,7 @@ increaseBet = Button(1055, 575, 120, 50, GREY, "-->", 50, 1085, 568)
 placeBet = Button(925, 630, 250, 50, GREY, "Place bet", 40, 975, 630)
 hit = Button(925, 465, 120, 50, GREY, "Hit", 40, 960, 470)
 stand = Button(1055, 465, 120, 50, GREY, "Stand", 35, 1075, 472)
-double = Button(925, 405, 120, 50, GREY, "Double", 30, 940, 412)
-split = Button(1055, 405, 120, 50, GREY, "Split", 35, 1080, 410)
+double = Button(925, 405, 250, 50, GREY, "Double", 45, 980, 405)
 returnToMenu = Button(10, 10, 100, 30, GREY, "Quit", 25, 37, 11)
 
 play = Button(400, 200, 400, 90, GREY, "PLAY", 70, 517, 205)
