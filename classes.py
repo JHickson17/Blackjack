@@ -201,9 +201,12 @@ class Player(Dealer):
         result = self.resultFont.render(resultText, 1, (255, 0, 0))
         screen.blit(result, (225, 300))
 
-    def win(self):
-        self.winnings = self.bet * 2
-        self.money += self.winnings
+    def pay_money(self):
+        if self.won:
+            self.winnings = self.bet * 2
+            self.money += self.winnings
+        elif self.draw:
+            self.moeny += self.bet
 
     def reset_player(self):
         self.playerCards = []
