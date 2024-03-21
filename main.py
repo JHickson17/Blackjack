@@ -51,7 +51,7 @@ def blackjack_display(player, dealer, betMade, standPressed, doublePressed):
 def check_for_double(player):
     card1 = player.playerCards[0][:-1]
     card2 = player.playerCards[1][:-1]
-    if player.playerTotal >= 9 and player.playerTotal <= 11:
+    if player.playerTotal >= 9 and player.playerTotal <= 11 and len(player.playerCards) == 2:
         if card1 != "1" and card2 != "1":
             return True
     return False
@@ -190,8 +190,8 @@ def blackjack():
             player.bet *= 2
             standPressed = True
             doublePressed = True
-            player.deal_player_card()
-            player.convert_player_card(player.lastPlayerCardDealt)
+            player.deal_card()
+            player.convert_card(player.lastPlayerCardDealt)
             player.load_card_images()
 
         if standPressed and not player.won: #Checks if the player has pressed stand and that they haven't already won
@@ -202,8 +202,7 @@ def blackjack():
 
         get_result(player, dealer, dealerTurnDone)    #Checks if the player has won, lost or drawn
 
-        if player.won:  #Checks if the player has won
-            player.win()    #Pays the player double their bet
+        player.pay_money()
         
         blackjack_display(player, dealer, betMade, standPressed, doublePressed)
 
