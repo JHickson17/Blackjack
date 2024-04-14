@@ -49,14 +49,14 @@ class Dealer():
             self.dealerCardImages.append(image)     #Adds the card images to an array
             self.lastDealerCardDealt += 1
 
-    def convert_card(self, cardNum):
+    def convert_card(self, cardNum):    #Converts the dealer's card to an integer and adds it to the total
         try:
             num = int(self.dealerCards[cardNum][:-1])
             if num == 1:
                 num += 10
         except:
             num = 10
-        self.dealerTotal += num     #Adds the card value to the dealer total
+        self.dealerTotal += num     
 
 
     def shuffle_deck(self):    #Shuffles the deck
@@ -78,20 +78,22 @@ class Dealer():
     def convert_ace(self):
         numOfAces = 0
         for card in self.dealerCards:   #Loops through all of the dealers cards and checks of there are any aces
-            if card[0][:-1] == "1":
+            if card[:-1] == "1":
                 numOfAces += 1  #Adds one to the total if there is an ace
         if numOfAces > 0:
             while self.dealerTotal > 21:    #If the player has any aces and their total is more than 21 it will change the value of the aces from 11 to 1
                 self.dealerTotal -= 10
                 numOfAces -= 1
 
-    def reset_deck(self, newCards):
+    def reset_deck(self):   #Retets the deck if their are less than 10 cards then shuffles it
         if len(self.cards) < 10:
-            print(self.cards)
-            self.cards += newCards
+            self.cards += ['1C', '1S', '1D', '1H', '2C', '2S', '2D', '2H', '3C', '3S', '3D', '3H', '4C', '4S', '4D', '4H',
+                            '5C', '5S', '5D', '5H', '6C', '6S', '6D', '6H', '7C', '7S', '7D', '7H', '8C', '8S', '8D', '8H',
+                            '9C', '9S', '9D', '9H', '10C', '10S', '10D', '10H', 'JC', 'JS', 'JD', 'JH', 'QC', 'QS', 'QD', 'QH',
+                            'KC', 'KS', 'KD', 'KH']
             self.shuffle_deck()
 
-    def reset_dealer(self):     #Resets everything once the round is done
+    def reset_dealer(self):     #Resets the dealer once the round is done
         self.dealerCards = []
         self.dealerCardImages = []
         self.numOfDealerCards = 0
@@ -147,7 +149,7 @@ class Player(Dealer):
             self.playerCardImages.append(image)     #Adds the image to an array
             self.lastPlayerCardDealt += 1
 
-    def convert_card(self, cardNum):
+    def convert_card(self, cardNum):    #Converts the player's card to an integer and adds it to the total
         try:
             num = int(self.playerCards[cardNum][:-1])
             if num == 1:
@@ -156,10 +158,10 @@ class Player(Dealer):
             num = 10
         self.playerTotal += num
 
-    def convert_ace(self):
+    def convert_ace(self):  #Converts the value of an ace to 1 if the total is over 21
         numOfAces = 0
         for card in self.playerCards:
-            if card[0][:-1] == "1":
+            if card[:-1] == "1":
                 numOfAces += 1
         if numOfAces > 0:
             while self.playerTotal > 21:
@@ -174,10 +176,10 @@ class Player(Dealer):
         moneyText = self.Moneyfont.render("Money: £" + str(self.money), 1, (0, 0, 0))   
         screen.blit(moneyText, (10, 40))    #Displays the user's money in the top left
 
-    def display_bet(self, screen, betMade):
+    def display_bet(self, screen, betMade): #Displays the bet amount
         if not betMade:
             betText = self.Betfont.render("£" + str(self.bet), 1, (255, 0, 0))
-        else:
+        else:   #Bet changes to green when bet placed
             betText = self.Betfont.render("£" + str(self.bet), 1, (0, 200, 0))
         screen.blit(betText, (930, 520))
 
@@ -185,12 +187,12 @@ class Player(Dealer):
         if self.money > self.bet:   #Increases the bet by 10 if the player has enough money
             self.bet += 10
 
-    def decrease_bet(self):
+    def decrease_bet(self): #Decrease the bet amount by 10 if it is over 10
         if self.bet > 10:
             self.bet -= 10
 
-    def display_result(self, screen):
-        self.resultFont = pygame.font.SysFont("comicsans", 100)
+    def display_result(self, screen):   #Displays how much the player has won or lost or if they've drawn
+        resultFont = pygame.font.SysFont("comicsans", 100)
         resultText = ""
         if self.won:
             resultText = "You won £" + str(self.winnings)
@@ -198,17 +200,14 @@ class Player(Dealer):
             resultText = "You lost £" + str(self.bet)
         if self.draw:
             resultText = "Draw"
-        result = self.resultFont.render(resultText, 1, (255, 0, 0))
+        result = resultFont.render(resultText, 1, (255, 0, 0))
         screen.blit(result, (225, 300))
 
-    def pay_money(self):
-        if self.won:
-            self.winnings = self.bet * 2
-            self.money += self.winnings
-        elif self.draw:
-            self.moeny += self.bet
+    def win(self):
+        self.winnings = self.bet * 2
+        self.money += self.winnings
 
-    def reset_player(self):
+    def reset_player(self): #Resets the player at the end of the round
         self.playerCards = []
         self.playerCardImages = []
         self.numOfPlayerCards = 0
@@ -234,12 +233,12 @@ class Button():
         self.rect = pygame.Rect(self.x_pos, self.y_pos, self.width, self.height)
         self.font = pygame.font.SysFont("dejavuserif", self.text_size)
 
-    def display_button(self, screen):
+    def display_button(self, screen):   #Displays the button
         buttonText = self.font.render(self.text, 1, (0, 0, 0))
         pygame.draw.rect(screen, self.colour, self.rect, 0, 30)
         screen.blit(buttonText, (self.text_x, self.text_y))
 
-    def button_pressed(self, mouse):
+    def button_pressed(self, mouse):    #Checks if the button has been pressed
         mouseButtons = pygame.mouse.get_pressed(num_buttons=3)
         if pygame.Rect.colliderect(mouse, self.rect) and mouseButtons[0]:
             return True
@@ -248,7 +247,7 @@ class Button():
         
 
 class Text_box():
-    def __init__(self, x_pos, y_pos, header, hidden=None):
+    def __init__(self, x_pos, y_pos, header, hidden):
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.header = header
@@ -258,31 +257,31 @@ class Text_box():
         self.input = ""
         self.font = pygame.font.SysFont("dejavuserif", 30)
 
-    def display_box(self, screen):
+    def display_box(self, screen):  #Displays the box that can be typed in
         pygame.draw.rect(screen, (255, 255, 255), self.rect, 0, 5)
         self.display_header(screen)
         self.display_input(screen)
 
-    def display_header(self, screen):
+    def display_header(self, screen):   #Displays the header that says what the box is for
         headerText = self.font.render(self.header, 1, (0, 0, 0))
         screen.blit(headerText, (self.x_pos, self.y_pos-35))
 
-    def check_if_selected(self, mouse):
+    def check_if_selected(self, mouse): #Checks if the box has been selected
         mouseButtons = pygame.mouse.get_pressed(num_buttons=3)
         if pygame.Rect.colliderect(mouse, self.rect) and mouseButtons[0]:
             self.boxSelected = True
         elif not pygame.Rect.colliderect(mouse, self.rect) and mouseButtons[0]:
             self.boxSelected = False
 
-    def enter_text(self, event):
+    def enter_text(self, event):    #Stores the input from the keyboard and if the backspace is pressed to delete characters
         if self.boxSelected:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     self.input = self.input[:-1:]
-                else:
+                elif len(self.input) <= 30:
                     self.input += event.unicode
 
-    def display_input(self,screen):
+    def display_input(self, screen):    #Displays the input from the user and replaces it with an asterisk if it is hidden
         if self.hidden:
             newText = "*" * len(self.input)
         else:
