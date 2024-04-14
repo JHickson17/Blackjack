@@ -21,7 +21,7 @@ YELLOW = (255, 255, 0)
 
 MENU_BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("images", "menu background.XCF")), (WIDTH, HEIGHT))
 
-def blackjack_display(player, dealer, betMade, standPressed, doublePressed):
+def blackjack_display(player, dealer, betMade, standPressed, doublePressed, startRound):
     SCREEN.fill(GREEN)
 
     rect1 = pygame.Rect(900, 0, 400, 700)
@@ -45,13 +45,16 @@ def blackjack_display(player, dealer, betMade, standPressed, doublePressed):
     
     pygame.display.update()
 
+    if player.money == 0 and startRound:
+        time.sleep(3)
+
     if player.won or player.draw or player.lost:
-        time.sleep(3)       #Pauses the program for 3 seconds at the end of the round
+        time.sleep(3)
 
 def check_for_double(player):
     card1 = player.playerCards[0][:-1]
     card2 = player.playerCards[1][:-1]
-    if player.playerTotal >= 9 and player.playerTotal <= 11 and len(player.playerCards) == 2:
+    if player.playerTotal >= 9 and player.playerTotal <= 11:    #Checks to see if the values of the cards add up to 9, 10 or 11
         if card1 != "1" and card2 != "1":
             return True
     return False
@@ -99,7 +102,7 @@ def change_bet(player, mouse, count, lastPressed):
 
 def start_round(player):
     for i in range(2):
-        player.deal_card()
+        player.deal_card()  #Deals 2 cards to the player at the start of the round and loads the images
         player.convert_card(player.lastPlayerCardDealt)
         player.load_card_images()
 
@@ -164,22 +167,24 @@ def blackjack():
 
         if startRound:  #Checks if it is the start of the round
             start_round(player)    #The player gets dealt 2 cards
+            if player.money == 0:   
+                player.money += 50  #If the players money reaches 0 they are given an extra £50
             startRound = False
 
         canDouble = check_for_double(player)
 
-        if betMade == False:    #Checks if the player hasn't made a bet
-            lastPressed = change_bet(player, mouse, count, lastPressed) #Lets the player change their bet
+        if betMade == False:    #Lets the player change their bet if it hasn't already been made
+            lastPressed = change_bet(player, mouse, count, lastPressed) 
 
         if placeBet.button_pressed(mouse) and betMade == False: #Checks if the player has pressed the place bet button and if they haven't already placed a bet
             betMade = True 
             player.money -= player.bet  #Takes the bet from the players money
 
-        if hit.button_pressed(mouse) and count > (lastPressed+60) and standPressed == False and betMade: #Checks if the player has pressed hit, if theu've pressed stand and if they've made a bet
-            if player.won == False and player.lost == False and player.draw == False: #Checks that the player hasn't already won, lost or drawn
-                player.deal_card()   #Gives the player another card
-                player.convert_card(player.lastPlayerCardDealt)  #Converts the card into an integer and adds it onto their total
-                player.load_card_images() #Loads the image for the card dealt and adds it to the array with the other images
+        if hit.button_pressed(mouse) and count > (lastPressed+60) and standPressed == False and betMade: 
+            if player.won == False and player.lost == False and player.draw == False: 
+                player.deal_card()        #Gives the player another card if they have made a bet and haven't pressed stand
+                player.convert_card(player.lastPlayerCardDealt)
+                player.load_card_images() 
                 lastPressed = count
 
         if stand.button_pressed(mouse) and count > (lastPressed+60): #Checks if the player presses stand
@@ -187,7 +192,7 @@ def blackjack():
 
         if betMade and double.button_pressed(mouse) and canDouble:
             player.money -= player.bet
-            player.bet *= 2
+            player.bet *= 2     #Gives the player another card and doubles their bet if they press double
             standPressed = True
             doublePressed = True
             player.deal_card()
@@ -197,18 +202,19 @@ def blackjack():
         if standPressed and not player.won: #Checks if the player has pressed stand and that they haven't already won
             dealerTurnDone = dealer.dealer_turn() #Gives the dealer a card if their total is 16 or less
 
-        player.convert_ace()    #If the players total is over 21 and they have and ace it changes the aces value to 1
-        dealer.convert_ace()      #If the dealers total is over 21 and they have and ace it changes the aces value to 1
+        player.convert_ace()    #If the players or dealers total is over 21 and they have and ace it changes the aces value from 11 to 1
+        dealer.convert_ace()
 
         get_result(player, dealer, dealerTurnDone)    #Checks if the player has won, lost or drawn
 
-        player.pay_money()
+        if player.won:  #Checks if the player has won
+            player.win()    #Pays the player double their bet
         
-        blackjack_display(player, dealer, betMade, standPressed, doublePressed)
+        blackjack_display(player, dealer, betMade, standPressed, doublePressed, startRound)
 
         if player.lost or player.won or player.draw:    #Checks if the round has ended
             roundEnd = True
-
+        
         if roundEnd: #Checks if the round has ended
             if signedIn:    #Checks if the player is signed in to an account
                 statistics["roundsPlayed"] += 1
@@ -219,9 +225,10 @@ def blackjack():
                 elif player.draw:
                     statistics["roundsDrawn"] += 1
                 update_statistics(username.input, statistics["roundsPlayed"], statistics["roundsWon"], statistics["roundsLost"], statistics["roundsDrawn"])
-                update_money(Username, player.money)    #Updates their money in the database
+                update_money(Username, player.money)    #Updates their money and statistics in the database
             dealer.reset_dealer() #Resets the dealers cards
             player.reset_player()   #Resets the players cards
+            dealer.reset_deck() #Resets the deck if the their are less than 10 cards
             betMade = False
             standPressed = False
             dealerTurnDone = False
@@ -229,7 +236,7 @@ def blackjack():
             startRound = True
 
         if returnToMenu.button_pressed(mouse):
-            break
+            break      #Returns to the menu
 
 def display_account():
     if username.input != "":    #Checks if the player is signed in
@@ -261,15 +268,15 @@ def menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
-
+        #Returns the button that the user presses
         mouse = mouse_rect()
-        if play.button_pressed(mouse):  #If they press the play button it returns play
+        if play.button_pressed(mouse):
             return "play"
         
-        if createAcc.button_pressed(mouse): #If they press the create account button it returns create account
+        if createAcc.button_pressed(mouse):
             return "create account"
         
-        if signIn.button_pressed(mouse):    #If they press the sign in button it returns sign in
+        if signIn.button_pressed(mouse):
             return "sign in"
         
         if leaderboardButton.button_pressed(mouse):
@@ -278,13 +285,13 @@ def menu():
         if statisticsButton.button_pressed(mouse) and username.input != "":
             return "statistics"
         
-        if signOut.button_pressed(mouse) and username.input != "":
+        if quit.button_pressed(mouse):
+            return "quit"
+        
+        if signOut.button_pressed(mouse) and username.input != "":  #Signs out the player
             username.input = ""
             password.input = ""
             confirmPassword.input = ""
-        
-        if quit.button_pressed(mouse):  #If they press the quit button it returns quit
-            return "quit"
 
         display_menu()  #Displays the menu
 
@@ -311,14 +318,14 @@ def check_details(mouse):
         else:
             return False
 
-def signed_in():
+def signed_in():    #Displays a message saying the player has signed in
     font = pygame.font.SysFont("dejavuserif", 30)
     message = font.render("Signed in!", 1, RED)
-    SCREEN.blit(message, (530, 450))
+    SCREEN.blit(message, (530, 450))    
     pygame.display.update()
     time.sleep(2)
 
-def incorrect_details():
+def incorrect_details():    #Displays a message saying the details are incorrect
     font = pygame.font.SysFont("dejavuserif", 30)
     errorMessage = font.render("Incorrect details. Try again.", 1, RED)
     SCREEN.blit(errorMessage, (440, 450))
@@ -347,12 +354,12 @@ def sign_in():
             confirmPassword.input = ""
             break
 
-        correctDetails= check_details(mouse)
+        correctDetails = check_details(mouse)
 
-        if correctDetails:
+        if correctDetails:  #Signs in and returns to menu if the detailsa are correct
             signed_in()
             break
-        elif not correctDetails and confirm.button_pressed(mouse):
+        elif not correctDetails and confirm.button_pressed(mouse):  #Displays message if they are incorrect
             incorrect_details()
 
         sign_in_display()   #Displays the sign in menu
@@ -360,22 +367,22 @@ def sign_in():
 def create_account_display(mouse, validPassword):
     SCREEN.blit(MENU_BACKGROUND, (0, 0))
 
-    username.display_box(SCREEN)
+    username.display_box(SCREEN)    #Diplays input boxes
     password.display_box(SCREEN)
     confirmPassword.display_box(SCREEN)
 
     back.display_button(SCREEN)
     confirm.display_button(SCREEN)
 
-    if validPassword == "invalid" and confirm.button_pressed(mouse):
-            password_error()
+    if validPassword == "invalid" and confirm.button_pressed(mouse):    #Dipslays error messages based on missing requirements
+        password_error()
     elif validPassword == "username taken" and confirm.button_pressed(mouse):
         existing_username()
     elif validPassword == "passwords not matching" and confirm.button_pressed(mouse):
         passwords_not_matching()
 
     pygame.display.update()
-
+#Different error messages
 def password_error():
     font = pygame.font.SysFont("dejavuserif", 30)
     errorMessage = font.render("Password must be between 8 and 20 character and contain at least 1 number", 1, RED)
@@ -396,7 +403,7 @@ def passwords_not_matching():
     SCREEN.blit(errorMessage, (425, 515))
     pygame.display.update()
     time.sleep(2)
-
+#Message for when account created
 def account_created():
     font = pygame.font.SysFont("dejavuserif", 30)
     message = font.render("Account Created!", 1, RED)
@@ -412,32 +419,32 @@ def create_account():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
-            username.enter_text(event)
+            username.enter_text(event)  #Lets the player type in the input boxes
             password.enter_text(event)
             confirmPassword.enter_text(event)
 
         mouse = mouse_rect()
 
-        username.check_if_selected(mouse)
+        username.check_if_selected(mouse)   #Checks if the input boces have been selected
         password.check_if_selected(mouse)
         confirmPassword.check_if_selected(mouse)
 
-        if back.button_pressed(mouse):
+        if back.button_pressed(mouse):  #Returns to the main menu
             username.input = ""
             password.input = ""
             confirmPassword.input = ""
             break
 
-        validPassword = validate_password(mouse)
+        validPassword = validate_account(mouse) #Checks if the details entered are valid
 
-        if validPassword == "valid":
+        if validPassword == "valid":    #Adds user to the database if the details are valid and returns to menu
             add_user(username.input, password.input, 100)
-            account_created()
+            account_created()   #Message saying account created
             break
 
         create_account_display(mouse, validPassword)
 
-def validate_password(mouse):
+def validate_account(mouse):
     existingRecord = find_user(username.input)
     containsNumber = False
     for i in range(10):
@@ -471,22 +478,22 @@ def leaderboard():
         mouse = mouse_rect()
         SCREEN.blit(MENU_BACKGROUND, (0, 0))
 
-        if len(players) < 10:
+        if len(players) < 10:   #Sets the leaderboard length to the number of players in the database if it is less than 10
             n = len(players)
-        else:
+        else:   #Otherwise it only shows 10
             n = 10
         for i in range(0, n):
-            leaderboardPlace = str(i+1)
+            leaderboardPlace = str(i+1) #Gets the player place in the leaderboard
             player = players[i]
-            if player[0] == username.input:
+            if player[0] == username.input: #Highlights the players name in yellow if they are signed in
                 colour = YELLOW
             else:
                 colour = RED
             font = pygame.font.SysFont("dejavuserif", 45)
-            text = font.render(leaderboardPlace+". "+str(player[0])+"    £"+str(player[1]), 1, colour)
-            SCREEN.blit(text, (450, 135+(50*i)))
+            text = font.render(leaderboardPlace+". "+str(player[0])+"    £"+str(player[1]), 1, colour)  #Their place on the leaderboard, name and money
+            SCREEN.blit(text, (450, 135+(50*i)))    #Displays the leaderboard
         returnToMenu.display_button(SCREEN)
-        if returnToMenu.button_pressed(mouse):
+        if returnToMenu.button_pressed(mouse):  #Returns to menu if pressed
             break
         pygame.display.update()
 
@@ -509,11 +516,11 @@ def statistics():
         font = pygame.font.SysFont("dejavuserif", 37)
         text = font.render("Rounds Played     Rounds Won     Rounds Lost     Rounds Drawn", 1, BLACK)
         SCREEN.blit(text, (140, 200))
-        for i in range(4):
+        for i in range(4):  #Displays each of the statistics below the deaders
             statistic = font.render(str(stats[i]), 1, RED)
             SCREEN.blit(statistic, (230+(i*250), 250))
         returnToMenu.display_button(SCREEN)
-        if returnToMenu.button_pressed(mouse):
+        if returnToMenu.button_pressed(mouse):  #Returns  to menu if pressed
             break
         pygame.display.update()
 
@@ -522,9 +529,9 @@ def main():
     run = True
     while run:
         time.sleep(0.5)
-        menuSelection = menu()      
+        menuSelection = menu()  #Runs the main menu
 
-        if menuSelection == "play":
+        if menuSelection == "play":     #Runs other menus based on what is returned from main menu
             menuSelection = blackjack()
         if menuSelection == "create account" and username.input == "":
             menuSelection = create_account()
