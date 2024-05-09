@@ -16,7 +16,6 @@ class Dealer():
         self.cardWidth = 100
         self.cardHeight = 150
         self.lastDealerCardDealt = 0
-        self.lastDealt = 0
 
     def load_card_images(self):   #Loads the images of the dealer's cards into a list
         self.numOfDealerCards = len(self.dealerCards)   #Gets the number of cards the dealer has
@@ -99,7 +98,6 @@ class Dealer():
         self.numOfDealerCards = 0
         self.dealerTotal = 0
         self.lastDealerCardDealt = 0
-        self.lastDealt = 0
 
 class Player(Dealer):   
     def __init__(self, cards, money):
